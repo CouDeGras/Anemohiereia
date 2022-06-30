@@ -39,12 +39,12 @@ ESP8266WebServer server(80);
 */
 
 // Your Domain name with URL path or IP address with path
-String openWeatherMapApiKey = "b7d07ce92538402d1dac83f838c56932";
+String openWeatherMapApiKey = "USE YOUR API";
 // Example:
 //String openWeatherMapApiKey = "bd939aa3d23ff33d3c8f5dd1dd4";
 
 // Replace with your country code and city
-String city = "Guangzhou";
+String city = "Guangzhou"; 
 String countryCode = "CN";
 bool rebootUpdate=0;
 // THE DEFAULT TIMER IS SET TO 10 SECONDS FOR TESTING PURPOSES
