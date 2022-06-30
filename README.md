@@ -22,4 +22,5 @@ OpenWeatherMap-enabled ESP8266 weather display
 Input format example:
 
 myWifi, myPasswd, Liverpool, GB, 0
+
 dormWifi, dormPasswd, Shanghai, CN, 8
