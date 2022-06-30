@@ -25,5 +25,6 @@ myWifi, myPasswd, Liverpool, GB, 0
 
 dormWifi, dormPasswd, Shanghai, CN, 8
 
+5. Submit and 8266 should reboot, ideally the weather would appear on screen.
 
 To make the configuration hotspot appear again, prevent your 8266 from connecting to the last memorized network. (e.g. distance your 8266 from router, or unplug your router, or open a phone hotspot w/ same name as your home router but w/ different password). 
