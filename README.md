@@ -11,7 +11,7 @@ OpenWeatherMap-enabled ESP8266 weather display
 
 **Steps:**
 
-1. Register an account at Openweathermap.org, obtain an API key (free plan will suffice)
+1. Register an account at Openweathermap.org, obtain an API key (free plan will suffice). Swap your key to the code.
 
 2. Upload the code to your ESP8266
 
