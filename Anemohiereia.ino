@@ -263,7 +263,7 @@ void setup()
     lcd.clear();
     lcd.setCursor(0 , 0);
     lcd.print("Connected");
-    Serial.println("Successfully Connected!!!");
+    Serial.println("Connected to Internet.");
     return;
   }
   else
@@ -311,6 +311,13 @@ void loop() {
   }
   else
   {
+    String tempus = timeClient.getFormattedTime();
+    lcd.setCursor(8 , 1);
+    lcd.print(tempus.substring(0, 2));
+    lcd.print(":");
+    lcd.print(tempus.substring(3, 5));
+    lcd.print(":");
+    lcd.print(tempus.substring(6, 8));
   }
 
 }
@@ -405,7 +412,7 @@ void createWebServer()
 
       IPAddress ip = WiFi.softAPIP();
       String ipStr = String(ip[0]) + '.' + String(ip[1]) + '.' + String(ip[2]) + '.' + String(ip[3]);
-      content = "<!DOCTYPE HTML>\r\n<html>Hello from ESP8266 at ";
+      content = "<!DOCTYPE HTML>\r\n<html>Anemohiereia Configuration Interface";
       content += "<form action=\"/scan\" method=\"POST\"><input type=\"submit\" value=\"scan\"></form>";
       content += ipStr;
       content += "<p>";
