@@ -51,21 +51,19 @@ ESP8266WebServer server(80);
 */
 
 // Your Domain name with URL path or IP address with path
-String openWeatherMapApiKey = "use your key";
+String openWeatherMapApiKey = "replace with your key";
 // Example:
 //String openWeatherMapApiKey = "bd939aa3d23ff33d3c8f5dd1dd4";
 
-// Replace with your country code and city
-String city = "Guangzhou";
-String countryCode = "CN";
+String city = "********";   //no need to change, configure in wifi portal
+String countryCode = "**";  //no need to change, configure in wifi portal
 bool rebootUpdate = 0;
-// THE DEFAULT TIMER IS SET TO 10 SECONDS FOR TESTING PURPOSES
-// For a final application, check the API call limits per hour/minute to avoid getting blocked/banned
+
 unsigned long lastTime = 0;
 // Timer set to 10 minutes (600000)
 //unsigned long timerDelay = 600000;
 // Set timer to 10 seconds (10000)
-unsigned long timerDelay = 3600000;
+unsigned long timerDelay = 3600000; // weather refresh rate (1h)
 
 String jsonBuffer;
 #include <Wire.h>
@@ -104,41 +102,48 @@ void getWeather() {
         Serial.println("Parsing input failed!");
         return;
       }
-      lcd.clear();
-      lcd.setCursor(0 , 0);
-      int tmp = myObject["main"]["temp"];
-      tmp -= 273;
-      lcd.print(tmp);
-      lcd.print(char(2));
-      lcd.print(" ");
-      lcd.print(myObject["main"]["humidity"]);
-      lcd.print("%");
-      lcd.setCursor(8 , 0);
-      String wedS =  JSON.stringify(myObject["weather"]);
-      char wed[50];
-      wedS.toCharArray(wed, 50);
-      Serial.println(wed);
+      if (rebootUpdate) {
+        lcd.clear();
+        lcd.setCursor(0 , 0);
+        int tmp = myObject["main"]["temp"];
+        tmp -= 273;
+        lcd.print(tmp);
+        lcd.print(char(2));
+        lcd.print(" ");
+        lcd.print(myObject["main"]["humidity"]);
+        lcd.print("%");
+        lcd.setCursor(8 , 0);
+        String wedS =  JSON.stringify(myObject["weather"]);
+        char wed[50];
+        wedS.toCharArray(wed, 50);
+        Serial.println(wed);
 
-      char *token1 = strtok(wed, ",");
-      char* token2 = strtok(NULL, ",");
-      char* wedescr1 = strtok(token2, "\"");
-      char* wedescr2 = strtok(NULL, "\"");
-      char* wedescr3 = strtok(NULL, "\"");
-      Serial.println(wedescr3);
-      lcd.print(wedescr3); //weather description
-      lcd.setCursor(0 , 1);
-      lcd.print(myObject["main"]["pressure"]);
-      lcd.print("hPa");
-      Serial.print("JSON object = ");
-      Serial.println(myObject);
-      Serial.print("Temperature: ");
-      Serial.println(myObject["main"]["temp"]); //IN KELVIN
-      Serial.print("Pressure: ");
-      Serial.println(myObject["main"]["pressure"]);
-      Serial.print("Humidity: ");
-      Serial.println(myObject["main"]["humidity"]);
-      Serial.print("Wind Speed: ");
-      Serial.println(myObject["wind"]["speed"]);
+        char *token1 = strtok(wed, ",");
+        char* token2 = strtok(NULL, ",");
+        char* wedescr1 = strtok(token2, "\"");
+        char* wedescr2 = strtok(NULL, "\"");
+        char* wedescr3 = strtok(NULL, "\"");
+        Serial.println(wedescr3);
+        lcd.print(wedescr3); //weather description
+        lcd.setCursor(0 , 1);
+        lcd.print(myObject["main"]["pressure"]);
+        lcd.print("hPa");
+        Serial.print("JSON object = ");
+        Serial.println(myObject);
+        Serial.print("Temperature: ");
+        Serial.println(myObject["main"]["temp"]); //IN KELVIN
+        Serial.print("Pressure: ");
+        Serial.println(myObject["main"]["pressure"]);
+        Serial.print("Humidity: ");
+        Serial.println(myObject["main"]["humidity"]);
+        Serial.print("Wind Speed: ");
+        Serial.println(myObject["wind"]["speed"]);
+      } else {
+        lcd.setCursor(0 , 0);
+        lcd.print("CONNEXION ERROR:");
+        lcd.setCursor(0 , 1);
+        lcd.print("NOT IN SYNC");
+      }
     }
     else {
       Serial.println("WiFi Disconnected");
@@ -184,7 +189,10 @@ void setup()
   lcd.backlight();
   lcd.clear();
   lcd.setCursor(0 , 0);
-  lcd.print("Initializing");
+  lcd.print("Loading");
+  lcd.setCursor(0 , 1);
+  lcd.print("Configuration");
+  delay(500);
   Serial.begin(115200); //Initialising if(DEBUG)Serial Monitor
   Serial.println();
   Serial.println("Disconnecting previously connected WiFi");
@@ -310,6 +318,8 @@ void loop() {
     lcd.print(tempus.substring(3, 5));
     lcd.print(":");
     lcd.print(tempus.substring(6, 8));
+    lcd.setCursor(15 , 0);
+    lcd.print(" ");
   }
   else
   {
@@ -320,6 +330,8 @@ void loop() {
     lcd.print(tempus.substring(3, 5));
     lcd.print(":");
     lcd.print(tempus.substring(6, 8));
+    lcd.setCursor(15 , 0);
+    lcd.print(char(0));
   }
 
 }
