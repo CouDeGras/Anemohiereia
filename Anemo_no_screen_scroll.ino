@@ -306,7 +306,7 @@ void loop() {
   if ((WiFi.status() == WL_CONNECTED))
   {
     getWeather();
-    while ((!timeClient.update() && (millis() - dernierTime) > timerDelay) || ((!timeClient.update()) && millis() < 600000)) {
+    while ((!timeClient.update() && (millis() - dernierTime) > timerDelay) || ((!timeClient.update()) && millis() < 6000)) {
       timeClient.forceUpdate();
       dernierTime = millis();
       Serial.println("Time updated");
