@@ -322,7 +322,7 @@ void loop() {
   if ((WiFi.status() == WL_CONNECTED))
   {
     getWeather();
-    while ((!timeClient.update() && (millis() - dernierTime) > timerDelay) || ((!timeClient.update()) && millis() < 600000)) {
+    while ((!timeClient.update() && (millis() - dernierTime) > timerDelay) || ((!timeClient.update()) && millis() < 60000)) {
       timeClient.forceUpdate();
       dernierTime = millis();
       Serial.println("Time updated");
@@ -535,13 +535,13 @@ void strollWeather() {
     for (;;) {
       lcd.setCursor(0, 1);
       lcd.print(wedbuffer);
-      wedbuffer = wedbuffer.substring(2, wedbuffer.length());
+      wedbuffer = wedbuffer.substring(2, wedbuffer.length()); // defines the step of scroll (2 chars)
       if (wedbuffer.length() < 16) {
         for (int i = 16 - wedbuffer.length(); i > 0; i--) {
           lcd.print(" ");
           }
         }
-        delay(500);
+        delay(500); // scroll interval
         if (wedbuffer.length() == 0) {
         break;
       }
