@@ -55,7 +55,7 @@ ESP8266WebServer server(80);
 */
 
 // Your Domain name with URL path or IP address with path
-String openWeatherMapApiKey = "b7d07ce92538402d1dac83f838c56932";
+String openWeatherMapApiKey = "USE YOUR KEY";
 // Example:
 //String openWeatherMapApiKey = "bd939aa3d23ff33d3c8f5dd1dd4";
 
