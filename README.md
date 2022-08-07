@@ -5,9 +5,9 @@ OpenWeatherMap-enabled ESP8266 weather display
 
 1. ESP8266 Dev board
 
-2. 1602 LCD
+2. 0802/1602 LCD
 
-3. An I2C Converter for 1602 LCD
+3. An I2C Converter for 0802/1602 LCD
 
 **Steps:**
 
