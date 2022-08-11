@@ -55,7 +55,7 @@ ESP8266WebServer server(80);
 */
 
 // Your Domain name with URL path or IP address with path
-String openWeatherMapApiKey = "USE YOUR KEY";
+String openWeatherMapApiKey = "USE YOURS";
 // Example:
 //String openWeatherMapApiKey = "bd939aa3d23ff33d3c8f5dd1dd4";
 
@@ -115,7 +115,7 @@ void getWeather() {
       if (rebootUpdate || redraw) {
         lcd.clear();
         redraw = 0;
-        lcd.setCursor(0, 0);
+        lcd.setCursor(0, 1);
         int tmp = myObject["main"]["temp"];
         tmp -= 273;
         lcd.print(tmp);
@@ -144,7 +144,7 @@ void getWeather() {
         Serial.println(wedescr3);
         String wedshort = String(wedescr3);
         wedshort.toUpperCase();
-        lcd.print(wedshort); //weather short description
+       // lcd.print(wedshort); //weather short description////////////////////////////////////
         lcd.setCursor(8, 0);
         lcd.print(myObject["main"]["pressure"]);
         lcd.print("hPa");
@@ -323,14 +323,12 @@ long dernierTime = 0;
 
 void scrollTime() {
   String tempus = timeClient.getFormattedTime();
-  lcd.setCursor(8, 1);
+  lcd.setCursor(0, 0);
   lcd.print(tempus.substring(0, 2));
   lcd.print(":");
   lcd.print(tempus.substring(3, 5));
   lcd.print(":");
   lcd.print(tempus.substring(6, 8));
-  lcd.setCursor(15, 0);
-  lcd.print(" ");
 }
 
 void loop() {
@@ -350,7 +348,7 @@ void loop() {
       dernierTime = millis();
       Serial.println("Time updated");
     }
-    strollWeather();
+    scrollWeather();
   }
   else
   {
@@ -531,17 +529,18 @@ void createWebServer()
   }
 }
 
-long strollTimer = 0;
+long scrollTimer = 0;
 
-void strollWeather() {
-  scrollTime();
-  if (millis() - strollTimer > 30000) {
-    strollTimer = millis();
+void scrollWeather() {
+    scrollTime();
+  if (millis() - scrollTimer > 30000) {
+    scrollTimer = millis();
     redraw = 1;
-    String wedbuffer = "               ";
+    String wedbuffer = "        ";
     wedbuffer.concat(weather_actual);
     wedbuffer.toUpperCase();
     for (;;) {
+        scrollTime();
       lcd.setCursor(0, 1);
       lcd.print(wedbuffer);
       wedbuffer = wedbuffer.substring(1, wedbuffer.length());
