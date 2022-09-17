@@ -15,9 +15,11 @@
 #include <Arduino.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <ESP8266mDNS.h>
+#include <ArduinoOTA.h>
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
-#define inactivity_delay 60000 //screen backlight auto-desactivation after 1 min
+#define inactivity_delay 60000 //screen backlight auto-desactivation after certain time
 #define DOP 12 //doppler radar pin
 long inactivity_timer = 0;
 /*
@@ -34,7 +36,7 @@ const char* ssid = "text";
 const char* passphrase = "text";
 String st;
 String content;
-
+long offline_timer = 0;
 
 //Function Decalration
 bool testWifi(void);
@@ -55,13 +57,13 @@ ESP8266WebServer server(80);
 */
 
 // Your Domain name with URL path or IP address with path
-String openWeatherMapApiKey = "USE YOURS";
+String openWeatherMapApiKey = "USE YOURS"; //change to your api key
 // Example:
 //String openWeatherMapApiKey = "bd939aa3d23ff33d3c8f5dd1dd4";
 
-//AUTO FILL FROM EEPROM, NEED NOT TO CHANGE
-String city = "";
-String countryCode = "";
+// Replace with your country code and city
+String city = "MANQUE"; //need not change
+String countryCode = "MANQUE"; //need not change
 bool rebootUpdate = 0;
 // THE DEFAULT TIMER IS SET TO 10 SECONDS FOR TESTING PURPOSES
 // For a final application, check the API call limits per hour/minute to avoid getting blocked/banned
@@ -95,12 +97,12 @@ bool miseajour = 0;
 JSONVar myObject;
 void getWeather() {
   // Send an HTTP GET request
-  if((millis() - lastTime) > timerDelay ) miseajour = 0;
+  if ((millis() - lastTime) > timerDelay ) miseajour = 0;
   if (!miseajour || !rebootUpdate) {
     // Check WiFi connection status
     if (WiFi.status() == WL_CONNECTED) {
-      if(!rebootUpdate) rebootUpdate = 1;
-      if(rebootUpdate&&(!miseajour)) miseajour = 1;
+      if (!rebootUpdate) rebootUpdate = 1;
+      if (rebootUpdate && (!miseajour)) miseajour = 1;
       String serverPath = "http://api.openweathermap.org/data/2.5/weather?q=" + city + "," + countryCode + "&APPID=" + openWeatherMapApiKey;
       Serial.println(serverPath);
       jsonBuffer = httpGETRequest(serverPath.c_str());
@@ -112,7 +114,7 @@ void getWeather() {
         return;
       }
 
-      if (rebootUpdate||miseajour) {
+      if (rebootUpdate || miseajour) {
         lcd.clear();
         lcd.setCursor(0, 1);
         int tmp = myObject["main"]["temp"];
@@ -199,9 +201,8 @@ String httpGETRequest(const char* serverName) {
 }
 void setup()
 {
+  delay(700);
   pinMode(DOP, INPUT);
-  lcd.noDisplay();
-  lcd.display();
   lcd.init();
   lcd.createChar(0, character_antenna);
   lcd.createChar(1, character_serial);
@@ -213,7 +214,6 @@ void setup()
   lcd.print("LOAD");
   lcd.setCursor(0, 1);
   lcd.print("CONFIG");
-  delay(500);
   Serial.begin(115200); //Initialising if(DEBUG)Serial Monitor
   Serial.println();
   Serial.println("Disconnecting previously connected WiFi");
@@ -317,6 +317,38 @@ void setup()
     delay(100);
     server.handleClient();
   }
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else { // U_FS
+      type = "filesystem";
+    }
+
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+  ArduinoOTA.begin();
 
 }
 
@@ -332,35 +364,70 @@ void scrollTime() {
   lcd.print(tempus.substring(6, 8));
 }
 
+bool hibernated = 0;
+
 void loop() {
   /**DOPPLER PRECSENCE SENSOR WILL DESACTIVATE BACKLIGHT TO SAVE POWER**/
-  if (digitalRead(DOP)) {
+  if (digitalRead(DOP) && hibernated) {
+    Serial.println("DISPLAY RESUSCITATED");
+    hibernated = 0;
     inactivity_timer = millis();
     lcd.setBacklight(1);
     lcd.display();
+    scrollTime();
+    lcd.setCursor(0, 1);
+    int tmp = myObject["main"]["temp"];
+    tmp -= 273;
+    lcd.print(tmp);
+    lcd.print(char(2));
+    lcd.print(" ");
+    lcd.print(myObject["main"]["humidity"]);
+    lcd.print("%");
+    lcd.setCursor(0, 1);
+    String wedS = JSON.stringify(myObject["weather"]);
+    char wed[500];
+    wedS.toCharArray(wed, 500);
+    /*THIS PART CHOPS THE JSON STRING BIT BY BIT TO GET THE WEATHER DESCRIPTION STRING*/
+    char* token1 = strtok(wed, ",");
+    char* token2 = strtok(NULL, ",");
+    char* token3 = strtok(NULL, ",");
+    char* wedFull1 = strtok(token3, "\"");
+    char* wedFull2 = strtok(NULL, "\"");
+    char* wedFull3 = strtok(NULL, "\"");
+    Serial.print("Weather: ");
+    Serial.println(wedFull3); //weather full description
+    weather_actual = String(wedFull3);
+  } else if (digitalRead(DOP) && !hibernated) {
+    inactivity_timer = millis();
   }
-  if (millis() - inactivity_timer > inactivity_delay) {
+  if (millis() - inactivity_timer > inactivity_delay && !hibernated) {
     lcd.setBacklight(0);
     lcd.clear();
     lcd.noDisplay();
+    hibernated = 1;
+    Serial.println("DISPLAY HIBERNATED");
   }
-  if ((WiFi.status() == WL_CONNECTED))
-  {
-    getWeather();
-    while ((!timeClient.update() && (millis() - dernierTime) > timerDelay) || ((!timeClient.update()) && millis() < 10000)) {
-      timeClient.forceUpdate();
-      dernierTime = millis();
-      Serial.println("Time updated");
+  if ((WiFi.status() == WL_CONNECTED)){
+    offline_timer = millis();
+  }
+  if(millis() - offline_timer > 5*60000) ESP.restart(); //auto reboot when disconnected from wifi
+  if (!hibernated) {
+    scrollWeather();
+    if ((WiFi.status() == WL_CONNECTED))
+    {
+      getWeather();
+      while ((!timeClient.update() && (millis() - dernierTime) > timerDelay) || ((!timeClient.update()) && millis() < 10000)) {
+        timeClient.forceUpdate();
+        dernierTime = millis();
+        Serial.println("Time updated");
+      }
     }
-    scrollWeather();
+    else
+    { lcd.setCursor(7, 1);
+      lcd.print(char(0));
+    }
   }
-  else
-  {
-    scrollWeather();
-    lcd.setCursor(7, 1);
-    lcd.print(char(0));
-  }
-
+  if(millis()<5*60000) ArduinoOTA.handle(); //OTA service
 }
 
 
